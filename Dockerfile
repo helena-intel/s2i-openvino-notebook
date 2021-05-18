@@ -14,25 +14,7 @@ USER root
 # Upgrade NodeJS > 12.0
 RUN curl -sL https://rpm.nodesource.com/setup_14.x | bash -  && \
   yum remove -y nodejs && \
-  yum install -y nodejs
-
-# Setup entitlements, install libGL + Xvfb
-RUN ls -al ./
-COPY ./etc-pki-entitlement /etc/pki/entitlement
-# Copy subscription manager configurations
-COPY ./rhsm-conf /etc/rhsm
-COPY ./rhsm-ca /etc/rhsm/ca
-# Delete /etc/rhsm-host to use entitlements from the build container
-RUN rm /etc/rhsm-host && \
-    # Initialize /etc/yum.repos.d/redhat.repo
-    # See https://access.redhat.com/solutions/1443553
-    yum repolist --disablerepo=* && \
-    subscription-manager repos --enable rhel-8-for-x86_64-baseos-rpms && \
-    yum -y update && \
-    yum -y install xorg-x11-server-Xvfb mesa-libGL mesa-libGL-devel qt5-qtbase-devel && \
-    # Remove entitlements and Subscription Manager configs
-    rm -rf /etc/pki/entitlement && \
-    rm -rf /etc/rhsm
+  yum install -y nodejs mesa-libGL
 
 # Copying in override assemble/run scripts
 COPY .s2i/bin /tmp/scripts
@@ -43,4 +25,9 @@ RUN chown -R 1001:0 /tmp/scripts /tmp/src
 USER 1001
 RUN /tmp/scripts/assemble
 RUN pip install openvino-dev
+RUN pip install --upgrade jupyterlab ipympl
+RUN pip install git+https://github.com/maartenbreddels/ipyvolume.git
+RUN git clone https://github.com/openvinotoolkit/openvino_notebooks.git
+RUN jupyter lab build
 CMD /tmp/scripts/run
+
