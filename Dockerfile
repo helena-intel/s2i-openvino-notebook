@@ -28,7 +28,10 @@ RUN pip install openvino-dev
 RUN pip install --upgrade jupyterlab ipympl
 RUN pip install git+https://github.com/maartenbreddels/ipyvolume.git
 RUN git clone https://github.com/openvinotoolkit/openvino_notebooks.git
-COPY --chown=1001:0 testing_notebooks openvino_notebooks
+COPY testing_notebooks openvino_notebooks/testing_notebooks
+USER root
+RUN chown -R 1001:0 openvino_notebooks
+USER 1001
 RUN jupyter lab build
 CMD /tmp/scripts/run
 
